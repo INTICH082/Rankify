@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum GameType {
+  DOTA2
+  CS2
+  VALORANT
+  LEAGUE_OF_LEGENDS
+  APEX_LEGENDS
+  OVERWATCH2
+}
+
+enum ServiceType {
+  RANK_BOOST
+  CALIBRATION
+  WIN_BOOST
+  COACHING
+  ACCOUNT_SALE
+}
+
+enum OrderStatus {
+  CREATED
+  PENDING_BOOSTER
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED_PENDING_REVIEW
+  CONFIRMED
+  DISPUTED
+  CANCELLED
+}
+
+enum EscrowStatus {
+  HOLDING
+  RELEASED
+  REFUNDED
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  username     String    @unique
+  passwordHash String
+  avatarUrl    String?
+  role         UserRole  @default(USER)
+  isVerified   Boolean   @default(false)
+
+  // Balances (in cents/minor units to avoid float issues)
+  balance       BigInt   @default(0)
+  escrowBalance BigInt   @default(0)
+
+  // Rating & Statistics
+  rating                  Float    @default(5.0)
+  ratingCount             Int      @default(0)
+  completedOrdersAsBooster Int     @default(0)
+  completedOrdersAsClient  Int     @default(0)
+
+  // Relations
+  ordersCreated  Order[]  @relation("ClientOrders")
+  ordersClaimed  Order[]  @relation("BoosterOrders")
+  sentMessages   ChatMessage[]
+  reviewsGiven   Review[] @relation("ReviewsGiven")
+  reviewsReceived Review[] @relation("ReviewsReceived")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([username])
+  @@index([email])
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  title       String
+  description String?
+  game        GameType
+  serviceType ServiceType
+  status      OrderStatus @default(CREATED)
+  
+  // Amount in minor currency units (e.g. cents / kopecks)
+  price       BigInt
+  currency    String      @default("RUB")
+
+  // Client (User who placed and paid for order)
+  clientId    String
+  client      User        @relation("ClientOrders", fields: [clientId], references: [id])
+
+  // Booster (User who accepted to fulfill the order)
+  boosterId   String?
+  booster     User?       @relation("BoosterOrders", fields: [boosterId], references: [id])
+
+  // Encrypted game credentials (accessible only by booster & client with AES-GCM key)
+  credentialsEncrypted String?
+
+  // Relations
+  escrow       EscrowTransaction?
+  messages     ChatMessage[]
+  reviews      Review[]
+
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([game])
+  @@index([clientId])
+  @@index([boosterId])
+}
+
+model EscrowTransaction {
+  id          String       @id @default(uuid())
+  orderId     String       @unique
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount      BigInt
+  status      EscrowStatus @default(HOLDING)
+  createdAt   DateTime     @default(now())
+  releasedAt  DateTime?
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+  text      String
+  attachments String[] @default([])
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  authorId   String
+  author     User     @relation("ReviewsGiven", fields: [authorId], references: [id])
+  targetId   String
+  target     User     @relation("ReviewsReceived", fields: [targetId], references: [id])
+  rating     Int      // 1 to 5
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@index([targetId])
+}

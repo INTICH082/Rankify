@@ -1,0 +1,15 @@
+{
+  "name": "rankify",
+  "private": true,
+  "scripts": {
+    "dev:web": "pnpm --filter @rankify/web dev",
+    "dev:api": "pnpm --filter @rankify/api dev",
+    "build:web": "pnpm --filter @rankify/web build",
+    "build:api": "pnpm --filter @rankify/api build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}
