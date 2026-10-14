@@ -1,7 +1,9 @@
+import { BoostHub } from '@/components/boost/BoostHub';
+
 export default function HomePage() {
   return (
     <main className="min-h-screen">
-      {/* Пустая страница с серым фоном */}
+      <BoostHub />
     </main>
   );
 }
