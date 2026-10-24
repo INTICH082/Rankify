@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Gamepad2, Crosshair, Users, Zap, Clock, Star, ShieldCheck, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Users, Zap, Clock, Star, ShieldCheck, CheckCircle2, ArrowRight } from 'lucide-react';
 import { INITIAL_FEED_ORDERS, type FeedOrder } from './boost-data';
+import { Dota2Logo, CS2Logo, FaceitLogo } from '@/components/icons/GameLogos';
 import { cn } from '@/lib/utils';
 
 export function BoostOrdersFeed() {
@@ -57,7 +58,7 @@ export function BoostOrdersFeed() {
                 : 'bg-[#252834] text-neutral-300 hover:text-white hover:bg-[#2e3241]'
             )}
           >
-            <Gamepad2 className="w-3.5 h-3.5 text-red-500" />
+            <Dota2Logo className="w-3.5 h-3.5 text-red-500" />
             <span>Dota 2</span>
           </button>
           <button
@@ -70,7 +71,7 @@ export function BoostOrdersFeed() {
                 : 'bg-[#252834] text-neutral-300 hover:text-white hover:bg-[#2e3241]'
             )}
           >
-            <Crosshair className="w-3.5 h-3.5 text-amber-500" />
+            <CS2Logo className="w-3.5 h-3.5 text-amber-500" />
             <span>CS2</span>
           </button>
         </div>
@@ -141,26 +142,35 @@ export function BoostOrdersFeed() {
               key={order.id}
               className="bg-[#1c1e26] hover:bg-[#20222b] p-4 sm:p-5 rounded-2xl border border-white/10 transition-all shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4"
             >
-              {/* Левая часть: Игра, звания, детали */}
+              {/* Левая часть: Игра с официальным лого, звания, детали */}
               <div className="flex items-start gap-4">
                 <div
                   className={cn(
                     'w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border mt-0.5',
                     order.gameId === 'dota2'
-                      ? 'bg-red-600/10 border-red-500/20 text-red-500'
-                      : 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                      ? 'bg-red-600/15 border-red-500/25'
+                      : order.subMode === 'faceit'
+                      ? 'bg-orange-500/15 border-orange-500/25'
+                      : 'bg-amber-500/15 border-amber-500/25'
                   )}
                 >
                   {order.gameId === 'dota2' ? (
-                    <Gamepad2 className="w-5 h-5" />
+                    <Dota2Logo className="w-6 h-6 text-red-500" />
+                  ) : order.subMode === 'faceit' ? (
+                    <FaceitLogo className="w-5 h-5 text-orange-500" />
                   ) : (
-                    <Crosshair className="w-5 h-5" />
+                    <CS2Logo className="w-6 h-6 text-amber-500" />
                   )}
                 </div>
 
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="text-sm font-bold text-white">{order.title}</span>
+                    {order.subMode === 'faceit' && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-orange-500/15 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-md">
+                        FACEIT
+                      </span>
+                    )}
                     {order.isDuo && (
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-md">
                         <Users className="w-3 h-3" />
